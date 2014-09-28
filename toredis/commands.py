@@ -1,3 +1,4 @@
+from itertools import izip
 from toredis._compat import string_types
 
 
@@ -2103,6 +2104,40 @@ class RedisCommandsMixin(object):
         if withscores:
             args.append("WITHSCORES")
         self.send_message(args, callback)
+
+    def geoadd(self, key, loc, value, callback=None):
+        pieces = ['GEOADD', key, "wgs84", loc[0], loc[1], value]
+        return self.send_message(pieces, callback)
+
+    def geosearch(self, name, loc, radius, sort="asc", offset=0, count=10,
+                  include=None, exclude=None, callback=None):
+        """
+        *  GEOSEARCH key MERCATOR|WGS84 x y  <GeoOptions>
+         *  GEOSEARCH key MEMBER m            <GeoOptions>
+         *
+         *  <GeoOptions> = [IN N m0 m1 ..] [RADIUS r]
+         *                 [ASC|DESC] [WITHCOORDINATES] [WITHDISTANCES]
+         *                 [GET pattern [GET pattern ...]]
+         *                 [INCLUDE key_pattern value_pattern [INCLUDE key_pattern value_pattern ...]]
+         *                 [EXCLUDE key_pattern value_pattern [EXCLUDE key_pattern value_pattern ...]]
+         *                 [LIMIT offset count]
+         *
+         *  For 'GET pattern' in GEOSEARCH:
+         *  If 'pattern' is '#.<attr>',  return actual point's attribute stored by 'GeoAdd'
+         *  Other pattern would processed the same as 'sort' command (Use same C++ function),
+         *  The patterns like '#', "*->field" are valid.
+        """
+        pieces = ['GEOSEARCH', name, "wgs84", loc[0], loc[1], "RADIUS", radius, sort]
+
+        if offset > -1 and count:
+            pieces.extend(["limit", offset, count])
+
+        if include and isinstance(include, list):
+            pieces.extend(["INCLUDE", include[0], include[1]])
+
+        if exclude and isinstance(exclude, list):
+            pieces.extend(["EXCLUDE", include[0], include[1]])
+        return self.send_message(pieces, callback)
 
     def zrangebyscore(self, key, min, max, withscores=False, limit=None, callback=None):
         """
