@@ -2139,6 +2139,41 @@ class RedisCommandsMixin(object):
             pieces.extend(["EXCLUDE", include[0], include[1]])
         return self.send_message(pieces, callback)
 
+    def raw_geosearch(self, name, loc, radius, sort="asc", offset=0, count=10,
+                  include=None, exclude=None, callback=None):
+        """
+        *  GEOSEARCH key MERCATOR|WGS84 x y  <GeoOptions>
+         *  GEOSEARCH key MEMBER m            <GeoOptions>
+         *
+         *  <GeoOptions> = [IN N m0 m1 ..] [RADIUS r]
+         *                 [ASC|DESC] [WITHCOORDINATES] [WITHDISTANCES]
+         *                 [GET pattern [GET pattern ...]]
+         *                 [INCLUDE key_pattern value_pattern [INCLUDE key_pattern value_pattern ...]]
+         *                 [EXCLUDE key_pattern value_pattern [EXCLUDE key_pattern value_pattern ...]]
+         *                 [LIMIT offset count]
+         *
+         *  For 'GET pattern' in GEOSEARCH:
+         *  If 'pattern' is '#.<attr>',  return actual point's attribute stored by 'GeoAdd'
+         *  Other pattern would processed the same as 'sort' command (Use same C++ function),
+         *  The patterns like '#', "*->field" are valid.
+        """
+        pieces = ['GEOSEARCH', name, "wgs84", loc[0], loc[1], "RADIUS", radius, sort]
+
+        if offset > -1 and count:
+            pieces.extend(["limit", offset, count])
+
+        if include and isinstance(include, list):
+            if len(include) % 2 == 0:
+                for x, y in izip(*[iter(include)] * 2):
+                    pieces.extend(["INCLUDE", x, y])
+
+        if exclude and isinstance(exclude, list):
+            if len(exclude) % 2 == 0:
+                for x, y in izip(*[iter(exclude)] * 2):
+                    pieces.extend(["EXCLUDE", x, y])
+
+        return self.send_message(pieces, callback)
+
     def zrangebyscore(self, key, min, max, withscores=False, limit=None, callback=None):
         """
         Return a range of members in a sorted set, by score
