@@ -2105,12 +2105,12 @@ class RedisCommandsMixin(object):
             args.append("WITHSCORES")
         self.send_message(args, callback)
 
-    def geoadd(self, key, loc, value, callback=None):
-        pieces = ['GEOADD', key, "wgs84", loc[0], loc[1], value]
+    def geoadd(self, key, loc, value, tp="wgs84", callback=None):
+        pieces = ['GEOADD', key, tp, loc[0], loc[1], value]
         return self.send_message(pieces, callback)
 
     def geosearch(self, name, loc, radius, sort="asc", offset=0, count=10,
-                  include=None, exclude=None, callback=None):
+                  include=None, exclude=None, tp="wgs84", callback=None):
         """
         *  GEOSEARCH key MERCATOR|WGS84 x y  <GeoOptions>
          *  GEOSEARCH key MEMBER m            <GeoOptions>
@@ -2127,7 +2127,7 @@ class RedisCommandsMixin(object):
          *  Other pattern would processed the same as 'sort' command (Use same C++ function),
          *  The patterns like '#', "*->field" are valid.
         """
-        pieces = ['GEOSEARCH', name, "wgs84", loc[0], loc[1], "RADIUS", radius, sort]
+        pieces = ['GEOSEARCH', name, tp, loc[0], loc[1], "RADIUS", radius, sort]
 
         if offset > -1 and count:
             pieces.extend(["limit", offset, count])
@@ -2140,7 +2140,7 @@ class RedisCommandsMixin(object):
         return self.send_message(pieces, callback)
 
     def raw_geosearch(self, name, loc, radius, sort="asc", offset=0, count=10,
-                  include=None, exclude=None, callback=None):
+                  include=None, exclude=None, tp="wgs84", callback=None):
         """
         *  GEOSEARCH key MERCATOR|WGS84 x y  <GeoOptions>
          *  GEOSEARCH key MEMBER m            <GeoOptions>
@@ -2157,7 +2157,7 @@ class RedisCommandsMixin(object):
          *  Other pattern would processed the same as 'sort' command (Use same C++ function),
          *  The patterns like '#', "*->field" are valid.
         """
-        pieces = ['GEOSEARCH', name, "wgs84", loc[0], loc[1], "RADIUS", radius, sort]
+        pieces = ['GEOSEARCH', name, tp, loc[0], loc[1], "RADIUS", radius, sort]
 
         if offset > -1 and count:
             pieces.extend(["limit", offset, count])
